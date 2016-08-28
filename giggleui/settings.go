@@ -1,8 +1,11 @@
 package giggleui
 
 import (
-  _ "github.com/andlabs/ui"
+	_ "github.com/andlabs/ui"
 )
 
-func ShowSettingsDialogue() {
+func ShowSettingsDialog() {
+}
+
+func ShowDialog(message string) {
 }
