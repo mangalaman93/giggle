@@ -1,0 +1,4 @@
+package gigglesync
+
+func Exit() {
+}
