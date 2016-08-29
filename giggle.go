@@ -1,77 +1,62 @@
 package main
 
 import (
-	"bytes"
+	"flag"
 	"fmt"
-	"image"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
-	desktop "github.com/axet/desktop/go"
-	"github.com/mangalaman93/giggle/gigglesync"
+	"github.com/axet/desktop/go"
+	"github.com/kardianos/service"
+	"github.com/mangalaman93/giggle/giggleservice"
 	"github.com/mangalaman93/giggle/giggleui"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (
-	cAppName           = "giggle"
-	cSettingsMenuEntry = "settings"
-	cExitMenuEntry     = "exit"
-	cExitIconFile      = "icons/exit.png"
-	cIconFile          = "icons/giggle.png"
-	cSettingsIconFile  = "icons/settings.png"
-	cAppFolder         = ".giggle"
-	cLogFolder         = "log"
-	cLogFile           = "giggle.log"
-	cFilePerm          = 660
-	cLogFileMaxSize    = 50 // MB
-	cLogMaxNumBackups  = 5
-	cLogMaxAge         = 30 // days
+	cAppName          = "giggle"
+	cAppDescription   = "syncs Overleaf repositories with Github"
+	cAppFolder        = "giggle"
+	cLogFolder        = "log"
+	cLogFile          = "giggle.log"
+	cFilePerm         = 640
+	cLogFileMaxSize   = 50 // MB
+	cLogMaxNumBackups = 5
+	cLogMaxAge        = 30 // days
 )
-
-var deskApp *desktop.DesktopSysTray
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	homePath := desktop.GetHomeFolder()
-	logFolder := filepath.Join(homePath, cAppFolder, cLogFolder)
-	_, err := os.Stat(logFolder)
+	homePath := desktop.GetAppDataFolder()
+	logFolderPath := filepath.Join(homePath, cAppFolder, cLogFolder)
+	_, err := os.Stat(logFolderPath)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "cannot find the path") {
-			errDir := os.MkdirAll(logFolder, os.FileMode(cFilePerm))
+			errDir := os.MkdirAll(logFolderPath, os.FileMode(cFilePerm))
 			if errDir != nil {
 				message := fmt.Sprintf("[ERROR] unable to create app folder :: %v", errDir)
 				giggleui.ShowDialog(message)
 				log.Fatalln(message)
+			} else {
+				log.Println("[INFO] created log directory")
 			}
 		} else {
 			message := fmt.Sprintf("[ERROR] unable to get app folder stats :: %v", err)
 			giggleui.ShowDialog(message)
 			log.Fatalln(message)
 		}
-	}
-}
-
-func onClickListener(mn *desktop.Menu) {
-	switch mn.Name {
-	case cSettingsMenuEntry:
-		giggleui.ShowSettingsDialog()
-	case cExitMenuEntry:
-		deskApp.Close()
-		log.Println("exiting system tray!")
-		gigglesync.Exit()
-	default:
-		log.Println("[WARNING] unknown menu entry:", mn.Name)
+	} else {
+		log.Println("[INFO] log directory already exists")
 	}
 }
 
 func main() {
-	homePath := desktop.GetHomeFolder()
-	logFilePath := filepath.Join(homePath, cAppFolder, cLogFolder, cLogFile)
+	homePath := desktop.GetAppDataFolder()
+	appPath := filepath.Join(homePath, cAppFolder, cLogFolder)
+	logFilePath := filepath.Join(appPath, cLogFile)
 	log.SetOutput(&lumberjack.Logger{
 		Filename:   logFilePath,
 		MaxSize:    cLogFileMaxSize,
@@ -81,50 +66,42 @@ func main() {
 	})
 	log.Println("#################### BEGIN OF LOG ##########################")
 
-	iconImages := make(map[string]image.Image)
-	iconFiles := []string{cIconFile, cSettingsIconFile, cExitIconFile}
-	for _, iconFile := range iconFiles {
-		iconData, err := Asset(iconFile)
-		if err != nil {
-			message := "[ERROR] unable to open icon image file :: internal error!"
+	svcFlag := flag.String("service", "", "Control the system service.")
+	flag.Parse()
+
+	svcConfig := &service.Config{
+		Name:        cAppName,
+		DisplayName: cAppName,
+		Description: cAppDescription,
+	}
+
+	giggleService := giggleservice.NewGiggleService(logFilePath, cAppName)
+	gService, errSvc := service.New(giggleService, svcConfig)
+	if errSvc != nil {
+		message := fmt.Sprintf("[ERROR] unable to create giggle service :: %v", errSvc)
+		giggleui.ShowDialog(message)
+		log.Fatalln(message)
+	}
+	log.Println("[INFO] ready to run giggle service")
+
+	if len(*svcFlag) != 0 {
+		errCtrl := service.Control(gService, *svcFlag)
+		if errCtrl != nil {
+			message := fmt.Sprintf("[ERROR] valid actions for giggle service %q :: %v",
+				service.ControlAction, errCtrl)
 			giggleui.ShowDialog(message)
 			log.Fatalln(message)
 		}
 
-		iconReader := bytes.NewReader(iconData)
-		icon, _, err := image.Decode(iconReader)
-		if err != nil {
-			message := "[ERROR] unable to decode image :: internal error!"
-			giggleui.ShowDialog(message)
-			log.Fatalln(message)
-		}
-
-		iconImages[iconFile] = icon
+		return
 	}
 
-	menu := []desktop.Menu{
-		{
-			Type:    desktop.MenuItem,
-			Enabled: true,
-			Name:    cSettingsMenuEntry,
-			Action:  onClickListener,
-			Icon:    iconImages[cSettingsIconFile],
-		},
-		{
-			Type:    desktop.MenuItem,
-			Enabled: true,
-			Name:    cExitMenuEntry,
-			Action:  onClickListener,
-			Icon:    iconImages[cExitIconFile],
-		},
+	errRun := gService.Run()
+	if errRun != nil {
+		message := fmt.Sprintf("[ERROR] unable to run giggle service :: %v", errRun)
+		giggleui.ShowDialog(message)
+		log.Fatalln(message)
 	}
 
-	deskApp = desktop.DesktopSysTrayNew()
-	deskApp.SetIcon(iconImages[cIconFile])
-	deskApp.SetTitle(cAppName)
-	deskApp.SetMenu(menu)
-	deskApp.Show()
-	log.Println("done setting up system tray")
-
-	desktop.Main()
+	log.Println("[INFO] exiting giggle service")
 }

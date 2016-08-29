@@ -6,6 +6,3 @@ import (
 
 func init() {
 }
-
-func Exit() {
-}
