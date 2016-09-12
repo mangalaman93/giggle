@@ -7,7 +7,8 @@ import (
 	"log"
 
 	"github.com/axet/desktop/go"
-	"github.com/kardianos/service"
+	"github.com/mangalaman93/giggle/giggleconf"
+	"github.com/mangalaman93/giggle/gigglecontent"
 	"github.com/mangalaman93/giggle/giggleui"
 	"github.com/skratchdot/open-golang/open"
 )
@@ -15,91 +16,95 @@ import (
 const (
 	cSettingsMenuEntry = "Settings"
 	cLogFileMenuEntry  = "Open Logs"
-	cExitMenuEntry     = "Exit"
-	cIconFile          = "icons/giggle.png"
-	cSettingsIconFile  = "icons/settings.png"
-	clogFileMenuFile   = "icons/log.png"
-	cExitIconFile      = "icons/exit.png"
 )
 
-type GiggleService struct {
-	appName     string
-	deskApp     *desktop.DesktopSysTray
-	logFilePath string
+var (
+	vIconFile         = giggleconf.GetIconFile()
+	vSettingsIconFile = giggleconf.GetSettingsIconFile()
+	vLogIconFile      = giggleconf.GetLogIconFile()
+)
+
+type GiggleTray struct {
+	tray *desktop.DesktopSysTray
 }
 
-func NewGiggleService(logFilePath, appName string) *GiggleService {
-	return &GiggleService{
-		appName:     appName,
-		deskApp:     nil,
-		logFilePath: logFilePath,
+func NewGiggleTray() *GiggleTray {
+	return &GiggleTray{
+		tray: desktop.DesktopSysTrayNew(),
 	}
 }
 
-func (gs *GiggleService) Start(s service.Service) error {
-	log.Println("[INFO] starting giggle service")
+func (gt *GiggleTray) Start() error {
+	log.Println("[INFO] starting giggle tray")
 
-	go gs.run()
+	go gt.run()
 	return nil
 }
 
-func (gs *GiggleService) Stop(s service.Service) error {
-	log.Println("[INFO] stopping giggle service")
+func (gt *GiggleTray) Stop() error {
+	log.Println("[INFO] stopping giggle tray")
 
 	// There is most likely a race condition when interrupt
 	// signal is sent. We avoid this by recovering from panic.
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("[WARNING] systray stop panic ::", r)
+			log.Println("[WARNING] systray stop panic ::", r)
 		}
 	}()
 
-	if gs.deskApp != nil {
-		gs.deskApp.Close()
+	if gt.tray != nil {
+		gt.tray.Close()
 	}
 
 	return nil
 }
 
-func (gs *GiggleService) onClickListener(mn *desktop.Menu) {
+func (gt *GiggleTray) onClickListener(mn *desktop.Menu) {
 	switch mn.Name {
 	case cSettingsMenuEntry:
 		log.Println("[INFO] settings menu option selected")
-		giggleui.ShowSettingsDialog()
+		urlToUI := giggleconf.GetURLToUI()
+		err := open.Run(urlToUI)
+		if err != nil {
+			message := fmt.Sprintf("[ERROR] unable to open url %s :: %v", urlToUI, err)
+			giggleui.Error(message)
+			log.Println(message)
+		}
 	case cLogFileMenuEntry:
 		log.Println("[INFO] log file menu option selected")
-		errOpen := open.Run(gs.logFilePath)
-		if errOpen != nil {
-			message := fmt.Sprintf("[ERROR] unable to open log file %s :: %v",
-				gs.logFilePath, errOpen)
-			giggleui.ShowDialog(message)
-			log.Fatalln(message)
+		logFolder := giggleconf.GetLogFolder()
+		err := open.Start(logFolder)
+		if err != nil {
+			message := fmt.Sprintf("[ERROR] unable to open log folder %s :: %v",
+				logFolder, err)
+			giggleui.Error(message)
+			log.Println(message)
 		}
-	case cExitMenuEntry:
-		log.Println("[INFO] exit menu option selected, closing systray!")
-		gs.deskApp.Close()
 	default:
 		log.Println("[WARNING] unknown menu entry:", mn.Name)
 	}
 }
 
-func (gs *GiggleService) run() {
+func (gt *GiggleTray) run() {
 	iconImages := make(map[string]image.Image)
-	iconFiles := []string{cIconFile, cSettingsIconFile, clogFileMenuFile, cExitIconFile}
+	iconFiles := []string{vIconFile, vSettingsIconFile, vLogIconFile}
+
 	for _, iconFile := range iconFiles {
-		iconData, err := Asset(iconFile)
+		iconData, err := gigglecontent.Asset(iconFile)
 		if err != nil {
 			message := "[ERROR] unable to open icon image file :: internal error!"
-			giggleui.ShowDialog(message)
-			log.Fatalln(message)
+			log.Println(message)
+			giggleui.Error(message)
+			panic(err)
 		}
 
 		iconReader := bytes.NewReader(iconData)
 		icon, _, err := image.Decode(iconReader)
 		if err != nil {
 			message := "[ERROR] unable to decode image :: internal error!"
-			giggleui.ShowDialog(message)
-			log.Fatalln(message)
+			log.Println(message)
+			giggleui.Error(message)
+			panic(err)
 		}
 
 		iconImages[iconFile] = icon
@@ -110,31 +115,23 @@ func (gs *GiggleService) run() {
 			Type:    desktop.MenuItem,
 			Enabled: true,
 			Name:    cSettingsMenuEntry,
-			Action:  gs.onClickListener,
-			Icon:    iconImages[cSettingsIconFile],
+			Action:  gt.onClickListener,
+			Icon:    iconImages[vSettingsIconFile],
 		},
 		{
 			Type:    desktop.MenuItem,
 			Enabled: true,
 			Name:    cLogFileMenuEntry,
-			Action:  gs.onClickListener,
-			Icon:    iconImages[clogFileMenuFile],
-		},
-		{
-			Type:    desktop.MenuItem,
-			Enabled: true,
-			Name:    cExitMenuEntry,
-			Action:  gs.onClickListener,
-			Icon:    iconImages[cExitIconFile],
+			Action:  gt.onClickListener,
+			Icon:    iconImages[vLogIconFile],
 		},
 	}
 	log.Println("[INFO] constructed system tray menu")
 
-	gs.deskApp = desktop.DesktopSysTrayNew()
-	gs.deskApp.SetIcon(iconImages[cIconFile])
-	gs.deskApp.SetTitle(gs.appName)
-	gs.deskApp.SetMenu(menu)
-	gs.deskApp.Show()
+	gt.tray.SetIcon(iconImages[vIconFile])
+	gt.tray.SetTitle(giggleconf.GetAppName())
+	gt.tray.SetMenu(menu)
+	gt.tray.Show()
 	log.Println("[INFO] done setting up system tray")
 
 	desktop.Main()

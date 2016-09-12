@@ -16,5 +16,5 @@ go-bindata.exe -o %OUT_FILE% -pkg %CONTENT_FOLDER% index.html css/... images/...
 cd ..
 
 REM build & install
-go install
+go install -v
 go build -o %EXECUTABLE%

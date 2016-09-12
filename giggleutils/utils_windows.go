@@ -1,10 +1,9 @@
 package giggleutils
 
 import (
-	"github.com/luisiturrios/gowin"
+	"github.com/axet/desktop/go"
 )
 
 func GetAppFolder() string {
-	folders := gowin.ShellFolders{gowin.ALL}
-	return folders.AppData()
+	return desktop.GetAppDataFolder()
 }

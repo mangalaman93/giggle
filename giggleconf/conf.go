@@ -2,6 +2,7 @@ package giggleconf
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,6 +12,8 @@ import (
 )
 
 const (
+	cAppName          = "giggle"
+	cUIPort           = 4444
 	cPasswordLength   = 24
 	cAppFolder        = ".giggle"
 	cLogFolder        = "log"
@@ -21,6 +24,10 @@ const (
 	cLogFileMaxSize   = 50 // MB
 	cLogMaxNumBackups = 5
 	cLogFileMaxAge    = 30 // days
+
+	cIconFile         = "images/giggle.png"
+	cSettingsIconFile = "images/settings.png"
+	clogIconFile      = "images/log.png"
 )
 
 type GiggleConfig struct {
@@ -34,6 +41,10 @@ func NewGiggleConfig() *GiggleConfig {
 		OnlySyncData: false,
 		RConfSecret:  giggleutils.RandomString(cPasswordLength),
 	}
+}
+
+func GetAppName() string {
+	return cAppName
 }
 
 func GetBaseFolder() string {
@@ -67,25 +78,35 @@ func GetLogFileMaxAge() int {
 	return cLogFileMaxAge
 }
 
+func GetIconFile() string {
+	return cIconFile
+}
+
+func GetSettingsIconFile() string {
+	return cSettingsIconFile
+}
+
+func GetLogIconFile() string {
+	return clogIconFile
+}
+
 func LoadConfigFile() (*GiggleConfig, error) {
 	baseFolder := GetBaseFolder()
 	settingsFile := filepath.Join(baseFolder, cSettingsFile)
 
 	_, err := os.Stat(settingsFile)
 	if os.IsNotExist(err) {
-		emptyConfig, err := json.Marshal(NewGiggleConfig())
+		emptyConfig, err := json.MarshalIndent(NewGiggleConfig(), "", "\t")
 		if err != nil {
 			return nil, err
 		}
 
 		ioutil.WriteFile(settingsFile, emptyConfig, cSecureFilePerm)
-	}
-
-	if err != nil {
+	} else if err != nil {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(settingsFile)
+	data, err := ioutil.ReadFile(settingsFile)
 	if err != nil {
 		return nil, err
 	}
@@ -96,5 +117,9 @@ func LoadConfigFile() (*GiggleConfig, error) {
 		return nil, err
 	}
 
-	return giggleConfig, nil
+	return &giggleConfig, nil
+}
+
+func GetURLToUI() string {
+	return fmt.Sprintf("http://localhost:%s/", cUIPort)
 }

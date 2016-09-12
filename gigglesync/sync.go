@@ -5,7 +5,7 @@ import (
 )
 
 type GiggleSyncRepo struct {
-	Name       string        `json:"name"`
+	Name       string                   `json:"name"`
 	SourceRepo *gigglerepo.GiggleRepo   `json:"source_repo"`
 	DestRepos  []*gigglerepo.GiggleRepo `json:"dest_repos"`
 }
