@@ -1,4 +1,13 @@
 package giggleui
 
-func ShowDialog(message string) {
+import (
+	"github.com/sqweek/dialog"
+)
+
+type uiConfig struct {
+	exposeExternal bool
+}
+
+func Error(message string) {
+	dialog.Message(message).Error()
 }

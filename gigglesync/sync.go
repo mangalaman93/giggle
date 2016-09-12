@@ -1,8 +1,11 @@
 package gigglesync
 
 import (
-	_ "github.com/jasonlvhit/gocron"
+	"github.com/mangalaman93/giggle/gigglerepo"
 )
 
-func init() {
+type GiggleSyncRepo struct {
+	Name       string        `json:"name"`
+	SourceRepo *gigglerepo.GiggleRepo   `json:"source_repo"`
+	DestRepos  []*gigglerepo.GiggleRepo `json:"dest_repos"`
 }

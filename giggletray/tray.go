@@ -1,4 +1,4 @@
-package giggleservice
+package giggletray
 
 import (
 	"bytes"

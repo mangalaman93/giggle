@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Giggle</title>
+    <link rel="shortcut icon" href="icons/giggle.png"/>
+    <!--Import local.css-->
+    <link type="text/css" rel="stylesheet" href="css/style.css"  media="screen,projection"/>
+    <!--Import Google Icon Font-->
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/material.indigo-pink.min.css"  media="screen,projection"/>
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+    <script type="text/javascript" src="js/material.min.js"></script>
+
+    <!-- Always shows a header, even in smaller screens. -->
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+        <header class="mdl-layout__header">
+            <div class="mdl-layout__header-row">
+                <!-- Title -->
+                <span class="mdl-layout-title">Giggle</span>
+                <!-- Add spacer, to align navigation to the right -->
+                <div class="mdl-layout-spacer"></div>
+                <nav class="mdl-navigation mdl-layout--large-screen-only">
+                    <a class="mdl-navigation__link" href="https://github.com/mangalaman93/giggle" data-reactid="11">
+                        <i class="material-icons" style="margin-right:8px;vertical-align:middle;" data-reactid="12">link</i>
+                        Source Code
+                    </a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="mdl-layout__content">
+            <div class="page-content">
+                <div class="mdl-grid">
+                    <div class="mdl-cell mdl-cell--3-col">
+                        <div class="demo-card-square mdl-card mdl-shadow--2dp">
+                            <figure class="mdl-card__media">
+                                <img src="http://tfirdaus.github.io/mdl/images/laptop.jpg" alt="" />
+                            </figure>
+                            <div class="mdl-card__title mdl-card--expand">
+                                <h2 class="mdl-card__title-text">Update</h2>
+                            </div>
+                            <div class="mdl-card__supporting-text">
+                                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                Aenan convallis.
+                            </div>
+                            <div class="mdl-card__actions mdl-card--border">
+                                <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                                    View Updates
+                                </a>
+                                <div class="mdl-layout-spacer"></div>
+                                <button class="mdl-button mdl-button--icon mdl-button--colored"><i class="material-icons">favorite</i></button>
+                                <button id="share-post-1" class="mdl-button mdl-button--icon mdl-button--colored"><i class="material-icons">share</i></button>
+                                <ul class="mdl-menu mdl-menu--top-right mdl-js-menu" for="share-post-1">
+                                    <li class="mdl-menu__item">Facebook</li>
+                                    <li class="mdl-menu__item">Twitter</li>
+                                    <li class="mdl-menu__item">Pinterest</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
