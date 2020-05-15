@@ -1,0 +1,31 @@
+{
+  "sync": [
+    {
+      "name": "project",
+      "from": {
+        "name": "overleaf"
+        "kind": "overleaf",
+        "url": "https://git.overleaf.com/abcdef",
+        "auth": "overleaf"
+      },
+      "to": [
+        {
+          "name": "github"
+          "kind": "github",
+          "url": "https://github.com/user/project",
+          "auth": "github"
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "github": {
+      "username": "email@example.com",
+      "password": "password"
+    },
+    "overleaf": {
+      "username": "email@example.com",
+      "password": "password"
+    }
+  }
+}
