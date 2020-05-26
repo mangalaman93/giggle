@@ -38,16 +38,18 @@ func (gs *Service) Stop() error {
 func (gs *Service) run(ch *conf.ConfigHolder) {
 	defer close(gs.done)
 
-	tick := time.NewTicker(time.Second * 10)
+	period := time.Second
 	for {
 		select {
 		case <-gs.quit:
 			log.Println("[INFO] exiting service loop")
 			return
-		case <-tick.C:
+		case <-time.After(period):
 			if err := performSync(context.Background(), ch); err != nil {
-				log.Printf("[ERROR] error in sync :: %v\n", err)
+				log.Printf("[ERROR] error syncing :: %v\n", err)
 			}
+
+			period = ch.GetPeriod()
 		}
 	}
 }

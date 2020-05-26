@@ -219,7 +219,7 @@ func TestFetch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error finding local remote :: %v", err)
 	}
-	if err := fetch(context.Background(), remote); err != nil {
+	if err := fetch(context.Background(), remote, nil); err != nil {
 		t.Fatalf("error fetching from remote :: %v", err)
 	}
 
@@ -233,7 +233,7 @@ func TestFetch(t *testing.T) {
 	}
 
 	// fetch new file
-	if err := fetch(context.Background(), remote); err != nil {
+	if err := fetch(context.Background(), remote, nil); err != nil {
 		t.Fatalf("error fetching from remote :: %v", err)
 	}
 	files, err := ioutil.ReadDir(repoDir)
@@ -248,7 +248,7 @@ func TestFetch(t *testing.T) {
 	// count the commits
 	iter, err := repo.Log(&git.LogOptions{All: true})
 	if err != nil {
-		t.Fatalf("error in getting all the commits :: %v", err)
+		t.Fatalf("error getting all the commits :: %v", err)
 	}
 	counter := 0
 	iter.ForEach(func(*object.Commit) error {
@@ -309,19 +309,19 @@ func TestPush(t *testing.T) {
 	}
 
 	// pull changes from repo1 to repo2
-	if err := fetch(context.Background(), remote1); err != nil {
-		t.Fatalf("error in fetching from repo1 :: %v", err)
+	if err := fetch(context.Background(), remote1, nil); err != nil {
+		t.Fatalf("error fetching from repo1 :: %v", err)
 	}
 
 	// push changes from repo2 to repo3 (that are on repo1 remote)
 	if err := push(context.Background(), remote1, remote3, nil); err != nil {
-		t.Fatalf("error in pushing from repo1 to repo3 :: %v", err)
+		t.Fatalf("error pushing from repo1 to repo3 :: %v", err)
 	}
 
 	// count the commits
 	iter, err := repo3.Log(&git.LogOptions{All: true})
 	if err != nil {
-		t.Fatalf("error in getting all the commits :: %v", err)
+		t.Fatalf("error getting all the commits :: %v", err)
 	}
 	counter := 0
 	iter.ForEach(func(*object.Commit) error {

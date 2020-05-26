@@ -11,3 +11,4 @@ Sync overleaf repositories with Github
 * Check end to end functionality
 * Add option to exit in the tray
 * UI for settings
+* Test on linux, windows and mac

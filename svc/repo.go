@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/mangalaman93/giggle/conf"
 )
 
@@ -16,30 +15,80 @@ func performSync(ctx context.Context, ch *conf.ConfigHolder) error {
 	log.Println("[INFO] periodic sync begin")
 	defer log.Println("[INFO] periodic sync end")
 
+	gconf := ch.Get()
+	for _, sc := range gconf.Sync {
+		log.Printf("[INFO] syncing %v\n", sc.Name)
+		if err := syncRepo(ctx, sc, gconf.Auth); err != nil {
+			log.Printf("[WARN] error syncing %v :: %v\n", sc.Name, err)
+			continue
+		}
+
+		log.Printf("[INFO] synced %v\n", sc.Name)
+	}
+
 	return nil
+}
+
+func syncRepo(ctx context.Context, sc conf.SyncConfig,
+	authMap map[string]*conf.AuthMethod) error {
+
+	repoFolder := conf.GetSyncTarget(sc.Name)
+	fromAuth := authMap[sc.From.AuthToUse]
+	fromRepo, err := openRepo(ctx, sc.From, fromAuth, repoFolder)
+	if err != nil {
+		return err
+	}
+
+	fromRemote, err := fromRepo.Remote(sc.From.Name)
+	if err != nil {
+		return err
+	}
+
+	if err := fetch(ctx, fromRemote, fromAuth); err != nil {
+		return err
+	}
+
+	var errRet error
+	for _, to := range sc.ToList {
+		toAuth := authMap[to.AuthToUse]
+		toRemote, err := createRemote(fromRepo, to.Name, to.URLToRepo)
+		if err != nil {
+			log.Printf("[WARN] error creating remote in: %v :: %v\n", sc.From.Name, err)
+			errRet = err
+			continue
+		}
+
+		if err := push(ctx, fromRemote, toRemote, toAuth); err != nil {
+			log.Printf("[WARN] error syncing to repo: %v :: %v\n", to.Name, err)
+			errRet = err
+			continue
+		}
+	}
+
+	return errRet
 }
 
 // openRepo opens the git repo and returns an instance to it.
 // If the repository doesn't exist, it would clone the repo first.
-func openRepo(ctx context.Context, cr conf.Repo, auth *http.BasicAuth, target string) (
+func openRepo(ctx context.Context, cr conf.Repo, auth *conf.AuthMethod, folder string) (
 	*git.Repository, error) {
 
-	if _, errExist := os.Stat(target); os.IsNotExist(errExist) {
-		repo, err := git.PlainCloneContext(ctx, target, false, &git.CloneOptions{
+	if _, errExist := os.Stat(folder); os.IsNotExist(errExist) {
+		repo, err := git.PlainCloneContext(ctx, folder, false, &git.CloneOptions{
 			URL:        cr.URLToRepo,
 			RemoteName: cr.Name,
-			Auth:       auth,
+			Auth:       auth.GetAuth(),
 		})
 		if err != nil {
-			return nil, fmt.Errorf("error in cloning the repo [%v] :: %w", cr.Name, err)
+			return nil, fmt.Errorf("error cloning the repo [%v] :: %w", cr.Name, err)
 		}
 
 		return repo, nil
 	}
 
-	repo, err := git.PlainOpen(target)
+	repo, err := git.PlainOpen(folder)
 	if err != nil {
-		return nil, fmt.Errorf("error in opening the repo [%v] :: %w", cr.Name, err)
+		return nil, fmt.Errorf("error opening the repo [%v] :: %w", cr.Name, err)
 	}
 
 	return repo, nil
@@ -58,7 +107,7 @@ func createRemote(repo *git.Repository, name, url string) (*git.Remote, error) {
 
 		return remote, nil
 	} else if err != nil && err != git.ErrRemoteNotFound {
-		return nil, fmt.Errorf("error in finding remote [%v] :: %w", name, err)
+		return nil, fmt.Errorf("error finding remote [%v] :: %w", name, err)
 	}
 
 	c := &config.RemoteConfig{
@@ -66,17 +115,17 @@ func createRemote(repo *git.Repository, name, url string) (*git.Remote, error) {
 		URLs: []string{url},
 	}
 	if remote, err = repo.CreateRemote(c); err != nil {
-		return nil, fmt.Errorf("error in creating remote [%v] :: %w", name, err)
+		return nil, fmt.Errorf("error creating remote [%v] :: %w", name, err)
 	}
 
 	return remote, nil
 }
 
 // fetch fetches from provided remote.
-func fetch(ctx context.Context, from *git.Remote) error {
-	err := from.FetchContext(ctx, &git.FetchOptions{})
+func fetch(ctx context.Context, from *git.Remote, am *conf.AuthMethod) error {
+	err := from.FetchContext(ctx, &git.FetchOptions{Auth: am.GetAuth()})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
-		return fmt.Errorf("error in fetching from [%v] :: %w", from.Config().Name, err)
+		return fmt.Errorf("error fetching from [%v] :: %w", from.Config().Name, err)
 	}
 
 	return nil
@@ -84,18 +133,16 @@ func fetch(ctx context.Context, from *git.Remote) error {
 
 // push pushes from the `from` remote to the `to` remote.
 // `auth` is authentication for `to` auth.
-func push(ctx context.Context, from, to *git.Remote, auth *http.BasicAuth) error {
-	refSpec := config.RefSpec(
-		fmt.Sprintf("refs/remotes/%s/master:refs/remotes/%s/master",
-			from.Config().Name, to.Config().Name),
-	)
-	err := to.PushContext(ctx, &git.PushOptions{
+func push(ctx context.Context, from, to *git.Remote, am *conf.AuthMethod) error {
+	o := &git.PushOptions{
 		RemoteName: to.Config().Name,
-		RefSpecs:   []config.RefSpec{refSpec},
-		Auth:       auth,
-	})
-	if err != nil {
-		return fmt.Errorf("error in pushing [%v] :: %w", refSpec, err)
+		Auth:       am.GetAuth(),
+		RefSpecs: []config.RefSpec{
+			config.RefSpec(fmt.Sprintf("refs/remotes/%v/master:refs/heads/master", from.Config().Name)),
+		},
+	}
+	if err := to.PushContext(ctx, o); err != nil && err != git.NoErrAlreadyUpToDate {
+		return fmt.Errorf("error pushing [%v] :: %w", o.RefSpecs, err)
 	}
 
 	return nil

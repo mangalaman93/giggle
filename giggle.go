@@ -60,10 +60,10 @@ func main() {
 	// read configuration file.
 	config, err := conf.New()
 	if err != nil {
-		message := fmt.Sprintf("[ERROR] error in reading config file :: %v", err)
+		message := fmt.Sprintf("[ERROR] error reading config file :: %v", err)
 		dialogAndPanic(message, err)
 	}
-	log.Println("[INFO] read config file:", config)
+	log.Printf("[INFO] read config file: %+v\n", config)
 
 	// giggle system tray
 	stray := tray.Start()

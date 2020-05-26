@@ -1,16 +1,17 @@
 {
+  "period": "1m",
   "sync": [
     {
       "name": "project",
       "from": {
-        "name": "overleaf"
+        "name": "overleaf",
         "kind": "overleaf",
         "url": "https://git.overleaf.com/abcdef",
         "auth": "overleaf"
       },
       "to": [
         {
-          "name": "github"
+          "name": "github",
           "kind": "github",
           "url": "https://github.com/user/project",
           "auth": "github"
@@ -20,11 +21,10 @@
   ],
   "auth": {
     "github": {
-      "username": "email@example.com",
-      "password": "password"
+      "token": "rhrhrhwqiwr-2lsasf"
     },
     "overleaf": {
-      "username": "email@example.com",
+      "token": "email@example.com",
       "password": "password"
     }
   }
