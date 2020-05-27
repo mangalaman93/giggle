@@ -288,6 +288,17 @@ func TestPush(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error opening repo :: %v", err)
 	}
+	wt3, err := repo3.Worktree()
+	if err != nil {
+		t.Fatalf("error in getting the work tree :: %v", err)
+	}
+	// checkout another branch, so that push doesn't fail.
+	if err := wt3.Checkout(&git.CheckoutOptions{
+		Branch: "dev",
+		Create: true,
+	}); err != nil {
+		t.Fatalf("error in creating a branch :: %v", err)
+	}
 
 	remote1, err := repo2.Remote("repo1")
 	if err != nil {
