@@ -15,23 +15,30 @@ import (
 const (
 	cSettingsMenuEntry = "Settings"
 	cLogFileMenuEntry  = "Open Logs"
+	cExitMenuEntry     = "Exit"
 )
 
 var (
 	vIconFile         = conf.IconFile()
 	vSettingsIconFile = conf.SettingsIconFile()
 	vLogIconFile      = conf.LogIconFile()
+	vExitIconFile     = conf.ExitIconFile()
 )
 
 // GTray is a giggle system tray.
 type GTray struct {
 	tray *desktop.DesktopSysTray
+	quit chan struct{}
 }
 
 // Start starts the system tray.
-func Start() *GTray {
-	gt := &GTray{tray: desktop.DesktopSysTrayNew()}
+func Start(quit chan struct{}) *GTray {
 	log.Println("[INFO] starting giggle tray")
+
+	gt := &GTray{
+		tray: desktop.DesktopSysTrayNew(),
+		quit: quit,
+	}
 	go gt.run()
 	return gt
 }
@@ -73,6 +80,11 @@ func (gt *GTray) onLogFileMenuClick(mn *desktop.Menu) {
 	}
 }
 
+func (gt *GTray) onExitMenuClick(mn *desktop.Menu) {
+	log.Println("[INFO] exit menu option selected")
+	gt.quit <- struct{}{}
+}
+
 func (gt *GTray) run() {
 	iconImages := make(map[string]image.Image)
 	iconFiles := []string{vIconFile, vSettingsIconFile, vLogIconFile}
@@ -108,6 +120,13 @@ func (gt *GTray) run() {
 			Name:    cLogFileMenuEntry,
 			Action:  gt.onLogFileMenuClick,
 			Icon:    iconImages[vLogIconFile],
+		},
+		{
+			Type:    desktop.MenuItem,
+			Enabled: true,
+			Name:    cExitMenuEntry,
+			Action:  gt.onExitMenuClick,
+			Icon:    iconImages[vExitIconFile],
 		},
 	}
 	log.Println("[INFO] constructed system tray menu")

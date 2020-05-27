@@ -66,7 +66,8 @@ func main() {
 	log.Printf("[INFO] read config file: %+v\n", config)
 
 	// giggle system tray
-	stray := tray.Start()
+	quit := make(chan struct{})
+	stray := tray.Start(quit)
 	defer func() {
 		if err := stray.Stop(); err != nil {
 			log.Println("[WARN] unable to stop giggle tray ::", err)
@@ -83,6 +84,9 @@ func main() {
 
 	// wait for ctrl+c
 	log.Println("[INFO] waiting for ctrl+c signal")
-	<-sigs
+	select {
+	case <-quit:
+	case <-sigs:
+	}
 	log.Println("[INFO] exiting giggle")
 }

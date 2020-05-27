@@ -25,6 +25,7 @@ const (
 	cIconFile         = "images/giggle.png"
 	cSettingsIconFile = "images/settings.png"
 	clogIconFile      = "images/log.png"
+	cExitIconFile     = "icons/exit.png"
 )
 
 // AppName returns the name of the app.
@@ -91,6 +92,11 @@ func SettingsIconFile() string {
 // LogIconFile returns the path of the log icon file in bindata.
 func LogIconFile() string {
 	return clogIconFile
+}
+
+// ExitIconFile returns the path of the exit icon file in bindata.
+func ExitIconFile() string {
+	return cExitIconFile
 }
 
 // URLToUI returns a url to Giggle UI.

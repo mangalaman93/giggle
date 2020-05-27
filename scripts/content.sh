@@ -17,6 +17,3 @@ cd $CONTENT_FOLDER
 $GOPATH/bin/go-bindata -o $OUT_FILE -pkg $CONTENT_FOLDER images/...
 cd ..
 
-# build & install
-go mod tidy
-go install -v

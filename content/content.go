@@ -95,7 +95,7 @@ func imagesExitPng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "images/exit.png", size: 20772, mode: os.FileMode(420), modTime: time.Unix(1589874811, 0)}
+	info := bindataFileInfo{name: "images/exit.png", size: 20772, mode: os.FileMode(420), modTime: time.Unix(1590587747, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
