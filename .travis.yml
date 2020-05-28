@@ -9,6 +9,8 @@ os:
   - linux
   - windows
 
+dist: bionic
+
 addons:
   apt:
     packages:
