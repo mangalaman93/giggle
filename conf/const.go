@@ -13,6 +13,7 @@ const (
 	cLogFolder        = "log"
 	cReposFolder      = "repos"
 	cConfigFile       = "config.json"
+	cPidFile          = "giggle.pid"
 	cLogFile          = "giggle.log"
 	cSecureFilePerm   = 0600
 	cDirPerm          = 0700
@@ -55,6 +56,11 @@ func LogFilePath() string {
 // SettingsFilePath returns the path to settings file.
 func SettingsFilePath() string {
 	return filepath.Join(baseFolder(), cConfigFile)
+}
+
+// PidFilePath returns the path to pid file.
+func PidFilePath() string {
+	return filepath.Join(baseFolder(), cPidFile)
 }
 
 // reposFolder returns the path to directory where all the repos are stored.

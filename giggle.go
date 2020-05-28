@@ -10,6 +10,7 @@ import (
 	"github.com/mangalaman93/giggle/conf"
 	"github.com/mangalaman93/giggle/svc"
 	"github.com/mangalaman93/giggle/tray"
+	"github.com/sevlyar/go-daemon"
 	"github.com/sqweek/dialog"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
@@ -21,6 +22,25 @@ func dialogAndPanic(message string, err error) {
 }
 
 func main() {
+	dctx := &daemon.Context{
+		PidFileName: conf.PidFilePath(),
+		PidFilePerm: 0644,
+	}
+	child, err := dctx.Reborn()
+	if err != nil {
+		fmt.Printf("unable to daemonize :: %v\n", err)
+		return
+	}
+
+	if child != nil {
+		fmt.Println("running the service as a daemon")
+	} else {
+		defer dctx.Release()
+		runChild()
+	}
+}
+
+func runChild() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	logFolder := conf.LogFolder()

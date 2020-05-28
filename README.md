@@ -9,6 +9,5 @@ Sync overleaf repositories with Github
 ## TODO
 
 * Travis build
-* Daemonize giggle
 * Test on linux, windows and mac
 * Add docs on how to use
