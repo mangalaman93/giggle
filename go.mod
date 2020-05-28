@@ -14,3 +14,5 @@ require (
 	github.com/sqweek/dialog v0.0.0-20200304031853-0dcd55bfe06a
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
+
+replace github.com/getlantern/systray => github.com/mangalaman93/systray v1.0.3-0.20200528193058-fa6e7ae8ca5d
