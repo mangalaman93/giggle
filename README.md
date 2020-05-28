@@ -15,6 +15,7 @@ Sync overleaf repositories with GitHub (runs as a system tray)
 
 * Copy the [example config file](https://github.com/mangalaman93/giggle/blob/master/config.json.example) to `$HOME/.config/.giggle/config.json` for Linux or `$HOME/Library/Application\ Support/.giggle/config.json` for Mac
 * Add sync configuration to the `config.json` file
+* **Make sure to create empty target repo on GitHub**
 
 ## Installation
 
