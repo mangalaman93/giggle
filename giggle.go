@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/getlantern/systray"
 	"github.com/mangalaman93/giggle/conf"
 	"github.com/mangalaman93/giggle/svc"
 	"github.com/mangalaman93/giggle/tray"
@@ -22,27 +23,6 @@ func dialogAndPanic(message string, err error) {
 }
 
 func main() {
-	dctx := &daemon.Context{
-		PidFileName: conf.PidFilePath(),
-		PidFilePerm: 0644,
-	}
-	child, err := dctx.Reborn()
-	if err != nil {
-		fmt.Printf("unable to daemonize :: %v\n", err)
-		return
-	}
-
-	if child != nil {
-		fmt.Println("running the service as a daemon")
-	} else {
-		defer dctx.Release()
-		runChild()
-	}
-}
-
-func runChild() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
 	logFolder := conf.LogFolder()
 	if _, err := os.Stat(logFolder); err != nil {
 		if os.IsNotExist(err) {
@@ -60,6 +40,27 @@ func runChild() {
 	} else {
 		log.Println("[INFO] log directory already exists")
 	}
+
+	dctx := &daemon.Context{
+		PidFileName: conf.PidFilePath(),
+		PidFilePerm: 0644,
+	}
+	child, err := dctx.Reborn()
+	if err != nil {
+		message := fmt.Sprintf("[ERROR] unable to daemonize :: %v", err)
+		dialogAndPanic(message, err)
+	}
+
+	if child != nil {
+		log.Println("running the service as a daemon")
+	} else {
+		defer dctx.Release()
+		runChild()
+	}
+}
+
+func runChild() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	logFilePath := conf.LogFilePath()
 	log.SetOutput(&lumberjack.Logger{
@@ -79,9 +80,9 @@ func runChild() {
 
 	// giggle system tray
 	quit := make(chan struct{})
-	stray := tray.Start(quit)
+	gt := tray.Start(quit)
 	defer func() {
-		if err := stray.Stop(); err != nil {
+		if err := gt.Stop(); err != nil {
 			log.Println("[WARN] unable to stop giggle tray ::", err)
 		}
 	}()
@@ -94,11 +95,18 @@ func runChild() {
 		}
 	}()
 
-	// wait for ctrl+c
-	log.Println("[INFO] waiting for ctrl+c signal")
-	select {
-	case <-quit:
-	case <-sigs:
-	}
+	go func() {
+		// wait for ctrl+c
+		log.Println("[INFO] waiting for ctrl+c signal")
+		select {
+		case <-quit:
+		case <-sigs:
+		}
+
+		systray.Quit()
+	}()
+
+	// This has to be called here in the main thread, fails on mac otherwise.
+	systray.Run(gt.OnReady, nil)
 	log.Println("[INFO] exiting giggle")
 }

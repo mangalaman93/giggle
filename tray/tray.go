@@ -26,24 +26,15 @@ type GTray struct {
 // Start starts the system tray.
 func Start(mainQuit chan struct{}) *GTray {
 	log.Println("[INFO] starting giggle tray")
-	gt := &GTray{mainQuit: mainQuit, quit: make(chan struct{})}
-	gt.wg.Add(1)
-	go gt.run()
-	return gt
+	return &GTray{mainQuit: mainQuit, quit: make(chan struct{})}
 }
 
 // Stop stops the system tray.
 func (gt *GTray) Stop() error {
 	log.Println("[INFO] stopping giggle tray")
-	systray.Quit()
 	gt.quit <- struct{}{}
 	gt.wg.Wait()
 	return nil
-}
-
-func (gt *GTray) run() {
-	defer gt.wg.Done()
-	systray.Run(gt.onReady, nil)
 }
 
 func (gt *GTray) onSettingsMenuClick() {
@@ -67,7 +58,8 @@ func (gt *GTray) onExitMenuClick() {
 	gt.mainQuit <- struct{}{}
 }
 
-func (gt *GTray) onReady() {
+// OnReady is the function that is passed to systray.Run.
+func (gt *GTray) OnReady() {
 	systray.SetIcon(getIcon(conf.IconFile()))
 	systray.SetTooltip(conf.AppName())
 
@@ -104,6 +96,7 @@ func (gt *GTray) handleClicks(settingsMenu, logFileMenu, exitMenu *systray.MenuI
 
 func getIcon(iconFile string) []byte {
 	iconData, err := content.Asset(iconFile)
+	log.Println(iconFile)
 	if err != nil {
 		log.Printf("[ERROR] unable to open icon for %v\n", iconFile)
 		panic(err)
