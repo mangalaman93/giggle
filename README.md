@@ -4,10 +4,51 @@
 
 ## giggle
 
-Sync overleaf repositories with Github
+Sync overleaf repositories with GitHub (runs as a system tray)
 
-## TODO
+## Requirements
 
-* Travis build
-* Test on linux, windows and mac
-* Add docs on how to use
+* Only works for Linux and darwin OS (Mac)
+* Doesn't work on windows yet, see https://github.com/getlantern/systray/issues/148
+
+## Setup Config
+
+* Copy the [example config file](https://github.com/mangalaman93/giggle/blob/master/config.json.example) to `$HOME/.config/.giggle/config.json` for Linux or `$HOME/Library/Application\ Support/.giggle/config.json` for Mac
+* Add sync configuration to the `config.json` file
+
+## Installation
+
+### Linux
+
+* Download the binary from [release](https://github.com/mangalaman93/giggle/releases/download/v0.1.0/giggle-linux-amd64) page
+* Setup `config.json` as described in [setup config](#setup-config)
+* `chmod +x giggle-linux-amd64`
+* Execute the binary
+
+## Mac
+
+* Download the binary from [release](https://github.com/mangalaman93/giggle/releases/download/v0.1.0/giggle-darwin-amd64) page
+* Setup `config.json` as described in [setup config](#setup-config)
+* `chmod +x giggle-darwin-amd64`
+* Execute the binary
+
+## Building from Source
+
+### Linux
+
+```
+sudo apt install libgtksourceview2.0-dev libgtk-3-dev libcairo2-dev libglib2.0-dev
+go get -u github.com/mangalaman93/giggle
+```
+
+### Mac
+
+```
+xcode-select --install.
+go get -u github.com/mangalaman93/giggle
+```
+
+## Future Work
+
+* Add UI to manage configuration
+* Fix running on windows
