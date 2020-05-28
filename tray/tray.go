@@ -1,14 +1,13 @@
 package tray
 
 import (
-	"bytes"
-	"image"
 	"log"
+	"sync"
 
+	"github.com/getlantern/systray"
 	"github.com/mangalaman93/giggle/conf"
 	"github.com/mangalaman93/giggle/content"
 	"github.com/skratchdot/open-golang/open"
-	desktop "gitlab.com/axet/desktop/go"
 )
 
 const (
@@ -17,27 +16,18 @@ const (
 	cExitMenuEntry     = "Exit"
 )
 
-var (
-	vIconFile         = conf.IconFile()
-	vSettingsIconFile = conf.SettingsIconFile()
-	vLogIconFile      = conf.LogIconFile()
-	vExitIconFile     = conf.ExitIconFile()
-)
-
 // GTray is a giggle system tray.
 type GTray struct {
-	tray *desktop.DesktopSysTray
-	quit chan struct{}
+	mainQuit chan struct{}
+	quit     chan struct{}
+	wg       sync.WaitGroup
 }
 
 // Start starts the system tray.
-func Start(quit chan struct{}) *GTray {
+func Start(mainQuit chan struct{}) *GTray {
 	log.Println("[INFO] starting giggle tray")
-
-	gt := &GTray{
-		tray: desktop.DesktopSysTrayNew(),
-		quit: quit,
-	}
+	gt := &GTray{mainQuit: mainQuit, quit: make(chan struct{})}
+	gt.wg.Add(1)
 	go gt.run()
 	return gt
 }
@@ -45,23 +35,18 @@ func Start(quit chan struct{}) *GTray {
 // Stop stops the system tray.
 func (gt *GTray) Stop() error {
 	log.Println("[INFO] stopping giggle tray")
-
-	// There is most likely a race condition when interrupt
-	// signal is sent. We avoid this by recovering from panic.
-	defer func() {
-		if r := recover(); r != nil {
-			log.Println("[WARNING] systray stop panic ::", r)
-		}
-	}()
-
-	if gt.tray != nil {
-		gt.tray.Close()
-	}
-
+	systray.Quit()
+	gt.quit <- struct{}{}
+	gt.wg.Wait()
 	return nil
 }
 
-func (gt *GTray) onSettingsMenuClick(mn *desktop.Menu) {
+func (gt *GTray) run() {
+	defer gt.wg.Done()
+	systray.Run(gt.onReady, nil)
+}
+
+func (gt *GTray) onSettingsMenuClick() {
 	log.Println("[INFO] settings menu option selected")
 	settingsPath := conf.SettingsFilePath()
 	if err := open.Start(settingsPath); err != nil {
@@ -69,7 +54,7 @@ func (gt *GTray) onSettingsMenuClick(mn *desktop.Menu) {
 	}
 }
 
-func (gt *GTray) onLogFileMenuClick(mn *desktop.Menu) {
+func (gt *GTray) onLogFileMenuClick() {
 	log.Println("[INFO] log file menu option selected")
 	logFolder := conf.LogFolder()
 	if err := open.Start(logFolder); err != nil {
@@ -77,62 +62,52 @@ func (gt *GTray) onLogFileMenuClick(mn *desktop.Menu) {
 	}
 }
 
-func (gt *GTray) onExitMenuClick(mn *desktop.Menu) {
+func (gt *GTray) onExitMenuClick() {
 	log.Println("[INFO] exit menu option selected")
-	gt.quit <- struct{}{}
+	gt.mainQuit <- struct{}{}
 }
 
-func (gt *GTray) run() {
-	iconImages := make(map[string]image.Image)
-	iconFiles := []string{vIconFile, vSettingsIconFile, vLogIconFile}
+func (gt *GTray) onReady() {
+	systray.SetIcon(getIcon(conf.IconFile()))
+	systray.SetTooltip(conf.AppName())
 
-	for _, iconFile := range iconFiles {
-		iconData, err := content.Asset(iconFile)
-		if err != nil {
-			log.Println("[ERROR] unable to open icon image file :: internal error!")
-			panic(err)
-		}
+	settingsMenu := systray.AddMenuItem(cSettingsMenuEntry, "")
+	settingsMenu.SetIcon(getIcon(conf.SettingsIconFile()))
 
-		iconReader := bytes.NewReader(iconData)
-		icon, _, err := image.Decode(iconReader)
-		if err != nil {
-			log.Println("[ERROR] unable to decode image :: internal error!")
-			panic(err)
-		}
+	logFileMenu := systray.AddMenuItem(cLogFileMenuEntry, "")
+	logFileMenu.SetIcon(getIcon(conf.LogIconFile()))
 
-		iconImages[iconFile] = icon
-	}
+	exitMenu := systray.AddMenuItem(cExitMenuEntry, "")
+	exitMenu.SetIcon(getIcon(conf.ExitIconFile()))
 
-	menu := []desktop.Menu{
-		{
-			Type:    desktop.MenuItem,
-			Enabled: true,
-			Name:    cSettingsMenuEntry,
-			Action:  gt.onSettingsMenuClick,
-			Icon:    iconImages[vSettingsIconFile],
-		},
-		{
-			Type:    desktop.MenuItem,
-			Enabled: true,
-			Name:    cLogFileMenuEntry,
-			Action:  gt.onLogFileMenuClick,
-			Icon:    iconImages[vLogIconFile],
-		},
-		{
-			Type:    desktop.MenuItem,
-			Enabled: true,
-			Name:    cExitMenuEntry,
-			Action:  gt.onExitMenuClick,
-			Icon:    iconImages[vExitIconFile],
-		},
-	}
+	gt.wg.Add(1)
+	go gt.handleClicks(settingsMenu, logFileMenu, exitMenu)
 	log.Println("[INFO] constructed system tray menu")
+}
 
-	gt.tray.SetIcon(iconImages[vIconFile])
-	gt.tray.SetTitle(conf.AppName())
-	gt.tray.SetMenu(menu)
-	gt.tray.Show()
-	log.Println("[INFO] done setting up system tray")
+func (gt *GTray) handleClicks(settingsMenu, logFileMenu, exitMenu *systray.MenuItem) {
+	defer gt.wg.Done()
 
-	desktop.Main()
+	for {
+		select {
+		case <-gt.quit:
+			return
+		case <-settingsMenu.ClickedCh:
+			gt.onSettingsMenuClick()
+		case <-logFileMenu.ClickedCh:
+			gt.onLogFileMenuClick()
+		case <-exitMenu.ClickedCh:
+			gt.onExitMenuClick()
+		}
+	}
+}
+
+func getIcon(iconFile string) []byte {
+	iconData, err := content.Asset(iconFile)
+	if err != nil {
+		log.Printf("[ERROR] unable to open icon for %v\n", iconFile)
+		panic(err)
+	}
+
+	return iconData
 }

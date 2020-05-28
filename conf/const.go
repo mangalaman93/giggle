@@ -24,7 +24,7 @@ const (
 	cIconFile         = "images/giggle.png"
 	cSettingsIconFile = "images/settings.png"
 	clogIconFile      = "images/log.png"
-	cExitIconFile     = "icons/exit.png"
+	cExitIconFile     = "images/exit.png"
 )
 
 // AppName returns the name of the app.
