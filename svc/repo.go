@@ -11,14 +11,13 @@ import (
 	"github.com/mangalaman93/giggle/conf"
 )
 
-func performSync(ctx context.Context, ch *conf.ConfigHolder) error {
+func performSync(ctx context.Context, cf *conf.Config) error {
 	log.Println("[INFO] periodic sync begin")
 	defer log.Println("[INFO] periodic sync end")
 
-	gconf := ch.Get()
-	for _, sc := range gconf.Sync {
+	for _, sc := range cf.Sync {
 		log.Printf("[INFO] syncing %v\n", sc.Name)
-		if err := syncRepo(ctx, sc, gconf.Auth); err != nil {
+		if err := syncRepo(ctx, sc, cf.Auth); err != nil {
 			log.Printf("[WARN] error syncing %v :: %v\n", sc.Name, err)
 			continue
 		}

@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestNewFrom(t *testing.T) {
-	if _, err := newFrom("../config.json.example"); err != nil {
+func TestReadConfig(t *testing.T) {
+	if _, err := ReadConfig("../config.json.example"); err != nil {
 		t.Fatalf("error in loading config :: %v", err)
 	}
 }

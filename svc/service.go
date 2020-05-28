@@ -15,14 +15,14 @@ type Service struct {
 }
 
 // Start starts the service.
-func Start(ch *conf.ConfigHolder) *Service {
+func Start() *Service {
 	log.Println("[INFO] starting giggle service")
 
 	gs := &Service{
 		quit: make(chan struct{}),
 		done: make(chan struct{}),
 	}
-	go gs.run(ch)
+	go gs.run()
 	return gs
 }
 
@@ -35,21 +35,26 @@ func (gs *Service) Stop() error {
 	return nil
 }
 
-func (gs *Service) run(ch *conf.ConfigHolder) {
+func (gs *Service) run() {
 	defer close(gs.done)
 
-	period := time.Second
 	for {
+		cf, err := conf.ReadConfig(conf.SettingsFilePath())
+		if err != nil {
+			log.Printf("[ERROR] error in reading config file :: %v\n", err)
+			log.Println("sleeping for a minute...")
+			time.Sleep(time.Minute)
+			continue
+		}
+
 		select {
 		case <-gs.quit:
 			log.Println("[INFO] exiting service loop")
 			return
-		case <-time.After(period):
-			if err := performSync(context.Background(), ch); err != nil {
+		case <-time.After(cf.Period.Duration):
+			if err := performSync(context.Background(), cf); err != nil {
 				log.Printf("[ERROR] error syncing :: %v\n", err)
 			}
-
-			period = ch.GetPeriod()
 		}
 	}
 }

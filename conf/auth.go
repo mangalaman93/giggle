@@ -30,17 +30,3 @@ func (m *AuthMethod) String() string {
 
 	return m.GetAuth().String()
 }
-
-func (m *AuthMethod) copy() *AuthMethod {
-	if m == nil {
-		return nil
-	}
-
-	if m.BasicAuth != nil {
-		basicAuth := *m.BasicAuth
-		return &AuthMethod{BasicAuth: &basicAuth}
-	}
-
-	tokenAuth := *m.TokenAuth
-	return &AuthMethod{TokenAuth: &tokenAuth}
-}

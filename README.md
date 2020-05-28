@@ -8,6 +8,7 @@ Sync overleaf repositories with Github
 
 ## TODO
 
-* daemonize
-* UI for settings
+* Travis build
+* Daemonize giggle
 * Test on linux, windows and mac
+* Add docs on how to use

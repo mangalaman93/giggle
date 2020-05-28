@@ -2,7 +2,6 @@ package tray
 
 import (
 	"bytes"
-	"fmt"
 	"image"
 	"log"
 
@@ -64,10 +63,9 @@ func (gt *GTray) Stop() error {
 
 func (gt *GTray) onSettingsMenuClick(mn *desktop.Menu) {
 	log.Println("[INFO] settings menu option selected")
-	urlToUI := conf.URLToUI()
-	if err := open.Run(urlToUI); err != nil {
-		message := fmt.Sprintf("[ERROR] unable to open url %s :: %v", urlToUI, err)
-		log.Println(message)
+	settingsPath := conf.SettingsFilePath()
+	if err := open.Start(settingsPath); err != nil {
+		log.Printf("[ERROR] unable to open %s :: %v\n", settingsPath, err)
 	}
 }
 
@@ -75,8 +73,7 @@ func (gt *GTray) onLogFileMenuClick(mn *desktop.Menu) {
 	log.Println("[INFO] log file menu option selected")
 	logFolder := conf.LogFolder()
 	if err := open.Start(logFolder); err != nil {
-		message := fmt.Sprintf("[ERROR] unable to open log folder %s :: %v", logFolder, err)
-		log.Println(message)
+		log.Printf("[ERROR] unable to open %s :: %v\n", logFolder, err)
 	}
 }
 

@@ -57,14 +57,6 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	log.Println("[INFO] adding signal handler for SIGTERM")
 
-	// read configuration file.
-	config, err := conf.New()
-	if err != nil {
-		message := fmt.Sprintf("[ERROR] error reading config file :: %v", err)
-		dialogAndPanic(message, err)
-	}
-	log.Printf("[INFO] read config file: %+v\n", config)
-
 	// giggle system tray
 	quit := make(chan struct{})
 	stray := tray.Start(quit)
@@ -75,7 +67,7 @@ func main() {
 	}()
 
 	// giggle service
-	gsvc := svc.Start(config)
+	gsvc := svc.Start()
 	defer func() {
 		if err := gsvc.Stop(); err != nil {
 			log.Println("[WARN] unable to stop giggle service ::", err)

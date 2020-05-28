@@ -1,7 +1,6 @@
 package conf
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -10,7 +9,6 @@ import (
 
 const (
 	cAppName          = "giggle"
-	cUIPort           = 4444
 	cAppFolder        = ".giggle"
 	cLogFolder        = "log"
 	cReposFolder      = "repos"
@@ -52,6 +50,11 @@ func LogFolder() string {
 // LogFilePath returns the path to log file.
 func LogFilePath() string {
 	return filepath.Join(LogFolder(), cLogFile)
+}
+
+// SettingsFilePath returns the path to settings file.
+func SettingsFilePath() string {
+	return filepath.Join(baseFolder(), cConfigFile)
 }
 
 // reposFolder returns the path to directory where all the repos are stored.
@@ -97,9 +100,4 @@ func LogIconFile() string {
 // ExitIconFile returns the path of the exit icon file in bindata.
 func ExitIconFile() string {
 	return cExitIconFile
-}
-
-// URLToUI returns a url to Giggle UI.
-func URLToUI() string {
-	return fmt.Sprintf("http://localhost:%d/", cUIPort)
 }
