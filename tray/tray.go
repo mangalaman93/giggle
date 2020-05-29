@@ -96,7 +96,6 @@ func (gt *GTray) handleClicks(settingsMenu, logFileMenu, exitMenu *systray.MenuI
 
 func getIcon(iconFile string) []byte {
 	iconData, err := content.Asset(iconFile)
-	log.Println(iconFile)
 	if err != nil {
 		log.Printf("[ERROR] unable to open icon for %v\n", iconFile)
 		panic(err)
