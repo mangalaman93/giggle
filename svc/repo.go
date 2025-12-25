@@ -105,7 +105,7 @@ func createRemote(repo *git.Repository, name, url string) (*git.Remote, error) {
 		}
 
 		return remote, nil
-	} else if err != nil && err != git.ErrRemoteNotFound {
+	} else if err != git.ErrRemoteNotFound {
 		return nil, fmt.Errorf("error finding remote [%v] :: %w", name, err)
 	}
 
