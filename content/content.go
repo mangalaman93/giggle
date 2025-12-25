@@ -21,7 +21,7 @@ import (
 func bindataRead(data []byte, name string) ([]byte, error) {
 	gz, err := gzip.NewReader(bytes.NewBuffer(data))
 	if err != nil {
-		return nil, fmt.Errorf("Read %q: %v", name, err)
+		return nil, fmt.Errorf("read %q: %v", name, err)
 	}
 
 	var buf bytes.Buffer
@@ -29,7 +29,7 @@ func bindataRead(data []byte, name string) ([]byte, error) {
 	clErr := gz.Close()
 
 	if err != nil {
-		return nil, fmt.Errorf("Read %q: %v", name, err)
+		return nil, fmt.Errorf("read %q: %v", name, err)
 	}
 	if clErr != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func imagesExitPng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "images/exit.png", size: 20772, mode: os.FileMode(420), modTime: time.Unix(1590587747, 0)}
+	info := bindataFileInfo{name: "images/exit.png", size: 20772, mode: os.FileMode(0420), modTime: time.Unix(1590587747, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -115,7 +115,7 @@ func imagesGigglePng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "images/giggle.png", size: 4217, mode: os.FileMode(420), modTime: time.Unix(1589874811, 0)}
+	info := bindataFileInfo{name: "images/giggle.png", size: 4217, mode: os.FileMode(0420), modTime: time.Unix(1589874811, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -135,7 +135,7 @@ func imagesLogPng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "images/log.png", size: 2113, mode: os.FileMode(420), modTime: time.Unix(1589874811, 0)}
+	info := bindataFileInfo{name: "images/log.png", size: 2113, mode: os.FileMode(0420), modTime: time.Unix(1589874811, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -155,7 +155,7 @@ func imagesSettingsPng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "images/settings.png", size: 4795, mode: os.FileMode(420), modTime: time.Unix(1589874811, 0)}
+	info := bindataFileInfo{name: "images/settings.png", size: 4795, mode: os.FileMode(0420), modTime: time.Unix(1589874811, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -164,7 +164,7 @@ func imagesSettingsPng() (*asset, error) {
 // It returns an error if the asset could not be found or
 // could not be loaded.
 func Asset(name string) ([]byte, error) {
-	cannonicalName := strings.Replace(name, "\\", "/", -1)
+	cannonicalName := strings.ReplaceAll(name, "\\", "/")
 	if f, ok := _bindata[cannonicalName]; ok {
 		a, err := f()
 		if err != nil {
@@ -190,7 +190,7 @@ func MustAsset(name string) []byte {
 // It returns an error if the asset could not be found or
 // could not be loaded.
 func AssetInfo(name string) (os.FileInfo, error) {
-	cannonicalName := strings.Replace(name, "\\", "/", -1)
+	cannonicalName := strings.ReplaceAll(name, "\\", "/")
 	if f, ok := _bindata[cannonicalName]; ok {
 		a, err := f()
 		if err != nil {
@@ -222,11 +222,13 @@ var _bindata = map[string]func() (*asset, error){
 // directory embedded in the file by go-bindata.
 // For example if you run go-bindata on data/... and data contains the
 // following hierarchy:
-//     data/
-//       foo.txt
-//       img/
-//         a.png
-//         b.png
+//
+//	data/
+//	  foo.txt
+//	  img/
+//	    a.png
+//	    b.png
+//
 // then AssetDir("data") would return []string{"foo.txt", "img"}
 // AssetDir("data/img") would return []string{"a.png", "b.png"}
 // AssetDir("foo.txt") and AssetDir("notexist") would return an error
@@ -234,7 +236,7 @@ var _bindata = map[string]func() (*asset, error){
 func AssetDir(name string) ([]string, error) {
 	node := _bintree
 	if len(name) != 0 {
-		cannonicalName := strings.Replace(name, "\\", "/", -1)
+		cannonicalName := strings.ReplaceAll(name, "\\", "/")
 		pathList := strings.Split(cannonicalName, "/")
 		for _, p := range pathList {
 			node = node.Children[p]
@@ -310,6 +312,6 @@ func RestoreAssets(dir, name string) error {
 }
 
 func _filePath(dir, name string) string {
-	cannonicalName := strings.Replace(name, "\\", "/", -1)
+	cannonicalName := strings.ReplaceAll(name, "\\", "/")
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }

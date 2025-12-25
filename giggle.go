@@ -54,7 +54,11 @@ func main() {
 	if child != nil {
 		log.Println("running the service as a daemon")
 	} else {
-		defer dctx.Release()
+		defer func() {
+			if err := dctx.Release(); err != nil {
+				log.Printf("error releasing daemon context: %v", err)
+			}
+		}()
 		runChild()
 	}
 }

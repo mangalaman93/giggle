@@ -251,10 +251,12 @@ func TestFetch(t *testing.T) {
 		t.Fatalf("error getting all the commits :: %v", err)
 	}
 	counter := 0
-	iter.ForEach(func(*object.Commit) error {
+	if err := iter.ForEach(func(*object.Commit) error {
 		counter++
 		return nil
-	})
+	}); err != nil {
+		t.Fatalf("error iterating commits :: %v", err)
+	}
 	iter.Close()
 	if counter != 2 {
 		t.Fatalf("fetch didn't work as expected")
@@ -335,10 +337,12 @@ func TestPush(t *testing.T) {
 		t.Fatalf("error getting all the commits :: %v", err)
 	}
 	counter := 0
-	iter.ForEach(func(*object.Commit) error {
+	if err := iter.ForEach(func(*object.Commit) error {
 		counter++
 		return nil
-	})
+	}); err != nil {
+		t.Fatalf("error iterating commits :: %v", err)
+	}
 	iter.Close()
 	if counter != 2 {
 		t.Fatalf("fetch didn't work as expected")
