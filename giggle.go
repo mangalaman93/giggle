@@ -18,7 +18,7 @@ import (
 
 func dialogAndPanic(message string, err error) {
 	log.Println(message)
-	dialog.Message(message).Error()
+	dialog.Message("%v", message).Error() //nolint:govet
 	panic(err)
 }
 

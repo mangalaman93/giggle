@@ -3,7 +3,6 @@ package svc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path"
@@ -121,7 +120,7 @@ func TestOpenRepo(t *testing.T) {
 	}
 
 	// ensure all the files are in place.
-	files, err := ioutil.ReadDir(repoDir)
+	files, err := os.ReadDir(repoDir)
 	if err != nil {
 		t.Fatalf("unable to read cloned repo dir :: %v", err)
 	}
@@ -236,7 +235,7 @@ func TestFetch(t *testing.T) {
 	if err := fetch(context.Background(), remote, nil); err != nil {
 		t.Fatalf("error fetching from remote :: %v", err)
 	}
-	files, err := ioutil.ReadDir(repoDir)
+	files, err := os.ReadDir(repoDir)
 	if err != nil {
 		t.Fatalf("unable to read cloned repo dir :: %v", err)
 	}
@@ -296,7 +295,7 @@ func TestPush(t *testing.T) {
 	}
 	// checkout another branch, so that push doesn't fail.
 	if err := wt3.Checkout(&git.CheckoutOptions{
-		Branch: "dev",
+		Branch: "refs/heads/dev",
 		Create: true,
 	}); err != nil {
 		t.Fatalf("error in creating a branch :: %v", err)
