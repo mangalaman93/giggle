@@ -3,7 +3,6 @@ package conf
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -36,7 +35,7 @@ func ReadConfig(configFile string) (*Config, error) {
 		return nil, fmt.Errorf("error modifying perm for conf file :: %w", err)
 	}
 
-	data, err := ioutil.ReadFile(configFile)
+	data, err := os.ReadFile(configFile)
 	if err != nil {
 		return nil, fmt.Errorf("error reading conf file :: %w", err)
 	}
