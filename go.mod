@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/getlantern/systray v1.2.2
-	github.com/go-git/go-git/v5 v5.16.4
+	github.com/go-git/go-git/v5 v5.16.5
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/sevlyar/go-daemon v0.1.6
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
