@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/getlantern/systray v1.2.2
-	github.com/go-git/go-git/v5 v5.16.5
+	github.com/go-git/go-git/v5 v5.17.0
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/sevlyar/go-daemon v0.1.6
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
@@ -28,7 +28,7 @@ require (
 	github.com/getlantern/hidden v0.0.0-20220104173330-f221c5a24770 // indirect
 	github.com/getlantern/ops v0.0.0-20231025133620-f368ab734534 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.7.0 // indirect
+	github.com/go-git/go-billy/v5 v5.8.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
